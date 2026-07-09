@@ -3,7 +3,8 @@
 
 ## 📌 Project Overview
 An end-to-end automated workflow designed to help SMEs analyze customer feedback in real-time. This project leverages **n8n** to connect LINE Official Account messages with GenAI (LLMs) to automatically classify customer sentiments and extract key insights without manual data entry.
-![Uploading Image_25690709_190616_393.webp…]()
+<img width="1253" height="623" alt="Image_25690709_190616_393" src="https://github.com/user-attachments/assets/d140400e-1811-4076-8c99-da8180070c6e" />
+
 
 
 ## 🛠️ Tech Stack & Tools
