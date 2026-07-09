@@ -1,0 +1,786 @@
+{
+  "name": "LINE Product Chat with Review Sentiment Analysis and Alert System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook",
+        "options": {}
+      },
+      "id": "d5505b54-d721-4f55-9599-cea688e03bfa",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -816,
+        336
+      ],
+      "webhookId": "150172c0-9223-41de-945a-f5cbef67ee67"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8",
+          "mode": "list",
+          "cachedResultName": "SME_AI_System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Products",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "2162c45a-3cd5-48b6-b0ff-5395abbb251f",
+      "name": "Get Product Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -592,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KdcgdQV9D9u5NuNI",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a6343269-b994-4fa0-9dcb-5e57afb8eb48",
+      "name": "Google Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        576
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "K2wOszcnmAlwXtTa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Role: คุณคือ AI Sales Assistant ของร้านค้าเรา มีนิสัยสุภาพ เป็นกันเอง น่ารัก และใช้ Emoji เพื่อความสดใส 🛍️✨\n\nProduct Data (รายการสินค้าที่มี):\n{{ JSON.stringify($('Get Product Data').all()) }}\n\nInstructions:\n1. **การตอบคำถาม:** ให้ตอบโดยอ้างอิงข้อมูลจาก \"Product Data\" ด้านบนเท่านั้น ถ้าลูกค้าถามถึงสินค้าที่ไม่มีในรายการ ให้แจ้งอย่างสุภาพว่า \"ขออภัยค่ะ สินค้านั้นทางเรายังไม่มีจำหน่าย\"\n2. **การขาย:** ถ้าลูกค้าแสดงความสนใจสินค้า ให้เชียร์ขายและพยายามปิดการขาย (เช่น ถามว่าจะรับกี่ชิ้น หรือเสนอราคา)\n3. **สำคัญมาก (System Tag):** หากข้อความของลูกค้าเป็น \"การรีวิวสินค้า\", \"คำชม\" หรือ \"Feedback\" ให้คุณตอบกลับโดยขึ้นต้นประโยคด้วยคำว่า [REVIEW] แล้วตามด้วยข้อความรีวิวนั้น (เพื่อให้ระบบบันทึกข้อมูล)\n4. **น้ำเสียง:** ใช้ภาษาไทยที่ถูกต้อง สุภาพ (ครับ/ค่ะ) และเป็นกันเอง\n\nUser Question (คำถามลูกค้า): {{ $('Webhook').item.json.body.events[0].message.text }}",
+        "batching": {}
+      },
+      "id": "10c205d4-9dae-494d-b8e7-b91a5e7924c4",
+      "name": "Generate Response",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -160,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "[REVIEW]",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0cd553d5-4afe-4faf-bba3-00ac64da3878",
+      "name": "Check for Review",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "693bf559-8024-4097-a133-ed77d69f920e",
+      "name": "Google Gemini Model for Sentiment",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        16
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "K2wOszcnmAlwXtTa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the sentiment of the following review and respond with ONLY one word: either 'Positive' or 'Negative'.\n\nReview: {{ $json.text }}",
+        "batching": {}
+      },
+      "id": "9098a6d1-e582-4d0d-b8f9-6d53cde14926",
+      "name": "Analyze Sentiment",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8",
+          "mode": "list",
+          "cachedResultName": "SME_AI_System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1435448962,
+          "mode": "list",
+          "cachedResultName": "Reviews",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit#gid=1435448962"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now }}",
+            "Review_Text": "={{ $('Check for Review').item.json.text }}",
+            "Sentiment": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Review_Text",
+              "displayName": "Review_Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "496e8edf-a291-4b8a-bcf4-2e70a350234a",
+      "name": "Save Review to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        192
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KdcgdQV9D9u5NuNI",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.Sentiment }}",
+              "rightValue": "Negative",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3c594a7f-d86d-42ba-9f8b-012a7b0b3b1c",
+      "name": "Check if Negative",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VvYbtPld9nM0DsweMPfSRNCHhHOCnHOMZyuHT6DFphnHrd+P3Qc1xx0vDcF3W2JU3AweYFsdPQpgaGZgINBhjUwPqbUUjfj/BLx5eOI/53n5t2PspY9rzON1rOb2gaEFjp2vzGIufwj8uX0WBYo29AdB04t89/1O/w1cDnyilFU="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"U07a1270fa4bca172cc32815a675750dd\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": {{ JSON.stringify(\"🚨 แจ้งเตือนรีวิวเชิงลบ: \" + $('Generate Response').item.json.text) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "4273d053-ad19-4af2-b626-2e4c87c15b9b",
+      "name": "Send LINE Notify Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1232,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer VvYbtPld9nM0DsweMPfSRNCHhHOCnHOMZyuHT6DFphnHrd+P3Qc1xx0vDcF3W2JU3AweYFsdPQpgaGZgINBhjUwPqbUUjfj/BLx5eOI/53n5t2PspY9rzON1rOb2gaEFjp2vzGIufwj8uX0WBYo29AdB04t89/1O/w1cDnyilFU="
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyToken\": \"{{ $('Webhook').item.json.body.events[0].replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": {{ JSON.stringify($('Generate Response').item.json.text) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "e5bdd75f-7ced-4a93-8f7d-ce24a69cd9e1",
+      "name": "Reply via LINE Messaging API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        464
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        336
+      ],
+      "id": "b3347697-ad4b-4500-ad72-947d4b34155c",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8",
+          "mode": "list",
+          "cachedResultName": "SME_AI_System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 165335455,
+          "mode": "list",
+          "cachedResultName": "Sales_Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit#gid=165335455"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.format('dd/MM/yyyy HH:mm') }}",
+            "Customer_Name": "={{ $('Webhook').item.json.body.events[0].source.userId }}",
+            "Interest": "={{ $('Webhook').item.json.body.events[0].message.text }}",
+            "Contact": "={{ $('Webhook').item.json.body.events[0].source.userId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer_Name",
+              "displayName": "Customer_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interest",
+              "displayName": "Interest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        784,
+        448
+      ],
+      "id": "c2137ae9-c0ee-4d95-b875-b8e666a497fa",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KdcgdQV9D9u5NuNI",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -752,
+        1008
+      ],
+      "id": "c5a0d032-ae10-44a3-9f43-16462a277b83",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8",
+          "mode": "list",
+          "cachedResultName": "SME_AI_System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 165335455,
+          "mode": "list",
+          "cachedResultName": "Sales_Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit#gid=165335455"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        1008
+      ],
+      "id": "aba64766-30b7-4c55-9c75-34547fd11c72",
+      "name": "Get Sales Leads",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KdcgdQV9D9u5NuNI",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Role: คุณคือผู้ช่วยวิเคราะห์ธุรกิจ (Executive Data Analyst) หน้าที่ของคุณคืออ่านข้อมูลดิบและสรุปผลการดำเนินงานแบบรายวันส่งให้เจ้าของกิจการ\n\nข้อมูลอ้างอิง:\n- วันที่เป้าหมาย (ต้องวิเคราะห์เฉพาะข้อมูลของวันนี้เท่านั้น): {{ $now.format('dd/MM/yyyy') }}\n- ข้อมูลลูกค้าที่ทักมา (Sales_Leads): {{ JSON.stringify($('Get Sales Leads').all()) }}\n- ข้อมูลรีวิวสินค้า (Reviews): {{ JSON.stringify($('Get Reviews').all()) }}\n\nคำสั่ง (ต้องปฏิบัติตามอย่างเคร่งครัด):\n1. กรองข้อมูล: ให้ตรวจสอบคอลัมน์ที่เกี่ยวกับวันที่ (Date) ในข้อมูล JSON ที่ให้ไป และนำมาคำนวณเฉพาะรายการที่มีตัวเลขวันที่ตรงกับ \"วันที่เป้าหมาย\" ({{ $now.format('dd/MM/yyyy') }}) เท่านั้น ข้อมูลของวันอื่นให้ข้ามไปเลย\n2. วิเคราะห์และเขียนรายงานสรุป ออกมาเป็น 3 หัวข้อดังนี้ (ใช้ภาษาไทยที่กระชับ เป็นมืออาชีพ และอ่านง่ายบนมือถือ):\n\n   📊 สรุปยอดขายประจำวัน (วันที่ {{ $now.format('dd/MM/yyyy') }})\n   - วันนี้มีลูกค้าทักมาสอบถามทั้งหมดกี่คน?\n   - สินค้าหรือเรื่องใดที่ลูกค้าสนใจถามถึงมากที่สุด? (บอกชื่อสินค้าและจุดเด่นที่เขาถาม)\n\n   📢 เสียงสะท้อนจากลูกค้า\n   - วันนี้มีคนมารีวิวทั้งหมดกี่รายการ? แบ่งเป็นเชิงบวก (Positive) และเชิงลบ (Negative) อย่างละกี่รายการ?\n   - ประเด็นหลักที่ลูกค้าชื่นชมคืออะไร? และมีข้อร้องเรียนอะไรที่ต้องรีบแก้ไขไหม? (ถ้าไม่มีให้ระบุว่า \"ไม่มีข้อร้องเรียน\")\n\n   💡 Action Plan เพื่อเพิ่มยอดขายพรุ่งนี้\n   - จากข้อมูลพฤติกรรมลูกค้าวันนี้ พรุ่งนี้เราควรทำการตลาดเน้นไปที่สินค้าตัวไหน?\n   - มีคำแนะนำสั้นๆ สำหรับแอดมินในการตอบแชทพรุ่งนี้หรือไม่?\n\nข้อจำกัด: ตอบเฉพาะเนื้อหารายงานตามโครงสร้างที่กำหนดเท่านั้น ห้ามพิมพ์คำทักทาย ห้ามแต่งเติมข้อมูลที่ไม่มีอยู่ใน Data เด็ดขาด",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -128,
+        1008
+      ],
+      "id": "573b6de2-d3c6-467b-a466-0020ee19462c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        1312
+      ],
+      "id": "0c1ed32d-118d-43b5-9e7f-dbf2c7c87c15",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "K2wOszcnmAlwXtTa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8",
+          "mode": "list",
+          "cachedResultName": "SME_AI_System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1435448962,
+          "mode": "list",
+          "cachedResultName": "Reviews",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XqixdYgmsd9SPp59CxfjZl82ogS9keV7bbKVPh8ZVj8/edit#gid=1435448962"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -336,
+        1008
+      ],
+      "id": "9a828898-0b32-4fe4-82fd-bedb9f77f4b2",
+      "name": "Get Reviews",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KdcgdQV9D9u5NuNI",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VvYbtPld9nM0DsweMPfSRNCHhHOCnHOMZyuHT6DFphnHrd+P3Qc1xx0vDcF3W2JU3AweYFsdPQpgaGZgINBhjUwPqbUUjfj/BLx5eOI/53n5t2PspY9rzON1rOb2gaEFjp2vzGIufwj8uX0WBYo29AdB04t89/1O/w1cDnyilFU="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"U07a1270fa4bca172cc32815a675750dd\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": {{ JSON.stringify($('Basic LLM Chain').item.json.text) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "27d6fd85-b42c-435e-a4ed-274c3e89c85f",
+      "name": "สรุปยอดขาย",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        976
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Product Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Product Data": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Response": {
+      "main": [
+        [
+          {
+            "node": "Check for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Review": {
+      "main": [
+        [
+          {
+            "node": "Analyze Sentiment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Model for Sentiment": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Sentiment",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Sentiment": {
+      "main": [
+        [
+          {
+            "node": "Save Review to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Review to Sheets": {
+      "main": [
+        [
+          {
+            "node": "Check if Negative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Negative": {
+      "main": [
+        [
+          {
+            "node": "Send LINE Notify Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply via LINE Messaging API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send LINE Notify Alert": {
+      "main": [
+        [
+          {
+            "node": "Reply via LINE Messaging API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Reply via LINE Messaging API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Sales Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Sales Leads": {
+      "main": [
+        [
+          {
+            "node": "Get Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Reviews": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "สรุปยอดขาย",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9d0ffc8b-2f8f-4e58-b8a6-59c81cefdc5f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8337a04330eaf3ac8032249d612ef78d7da65dd0e6d0f5d8188cd45739d813d9"
+  },
+  "id": "MTDUBS1T46vmPaaU",
+  "tags": []
+}
