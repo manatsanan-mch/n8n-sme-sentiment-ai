@@ -2,8 +2,8 @@
 
 ## 📌 Project Overview
 An end-to-end automated workflow designed to help SMEs analyze customer feedback in real-time. This project leverages **n8n** to connect LINE Official Account messages with GenAI (LLMs) to automatically classify customer sentiments and extract key insights without manual data entry.
-<img width="1253" height="623" alt="<img width="1600" height="522" alt="1000065172" src="https://github.com/user-attachments/assets/addb4df4-9232-4a2e-bf9f-1e290a7f7703" />
-"
+<img width="1600" height="522" alt="1000065172" src="https://github.com/user-attachments/assets/addb4df4-9232-4a2e-bf9f-1e290a7f7703" />
+
 
 ## 🛠️ Tech Stack & Tools
 * **Workflow Automation:** n8n (Node-based automation)
