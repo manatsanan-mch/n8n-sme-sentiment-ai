@@ -2,7 +2,8 @@
 
 ## 📌 Project Overview
 An end-to-end automated workflow designed to help SMEs analyze customer feedback in real-time. This project leverages **n8n** to connect LINE Official Account messages with GenAI (LLMs) to automatically classify customer sentiments and extract key insights without manual data entry.
-<img width="1253" height="623" alt="Image_25690709_190616_393" src="https://github.com/user-attachments/assets/d140400e-1811-4076-8c99-da8180070c6e" />
+<img width="1253" height="623" alt="<img width="1600" height="522" alt="1000065172" src="https://github.com/user-attachments/assets/addb4df4-9232-4a2e-bf9f-1e290a7f7703" />
+"
 
 ## 🛠️ Tech Stack & Tools
 * **Workflow Automation:** n8n (Node-based automation)
@@ -11,13 +12,13 @@ An end-to-end automated workflow designed to help SMEs analyze customer feedback
 * **Storage/Dashboarding:** Google Sheets / BI Tools
 
 ## 💡 Key Highlights & Business Impact
-* **100% Automated Pipeline:** Eliminated manual data extraction and tagging.
-* **Real-World Deployment:** Successfully deployed and tested by **6 active SME test users**.
-* **Actionable Insights:** Enabled business owners to immediately identify negative feedback and respond faster.
+* **Zero Manual Intervention:** Fully automated end-to-end pipeline that eliminates manual data extraction, tagging, and logging.
+* **Real-World Deployment:** Successfully deployed and tested with **6 active SME test users**.
+* **Actionable Insights:** Enables business owners to immediately identify negative feedback and respond in real-time.
 
 ## 📂 Repository Contents
 * `workflow_export.json`: The raw n8n workflow file. (You can easily import this into your local n8n instance to see the pipeline structure).
-* *(Note: API keys and sensitive credentials have been removed for security purposes).*
+* *(Note: All API keys and sensitive credentials have been replaced with placeholders e.g., `YOUR_LINE_CHANNEL_ACCESS_TOKEN` for security purposes).*
 
 ## ⚙️ How to Use
 1. Install [n8n](https://n8n.io/).
